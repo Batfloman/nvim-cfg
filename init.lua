@@ -98,11 +98,13 @@ vim.g.have_nerd_font = false
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
 
--- Make line numbers default
-vim.opt.number = true
--- You can also add relative line numbers, to help with jumping.
---  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+-- Enable line numbers
+vim.opt.number = true -- Set absolute line numbers
+vim.opt.relativenumber = true -- Set relative line numbers
+
+-- Align absolute line numbers to the left and relative line numbers to the right
+vim.opt.numberwidth = 5 -- Set the width of the number column
+vim.opt.signcolumn = 'yes' -- Show sign column to avoid shifting text
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
