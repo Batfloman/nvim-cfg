@@ -17,7 +17,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- [[ Import the plugin_list ]]
-local plugin_list = require 'first.config.plugin_list'
+local plugin_list = require 'first.plugins.plugin_list'
 
 -- [[ Configure and install plugins ]]
 --
