@@ -146,13 +146,6 @@ vim.opt.timeoutlen = 300
 vim.opt.splitright = true
 vim.opt.splitbelow = true
 
--- Sets indentation
-vim.opt.tabstop = 3 -- Number of visual spaces per TAB
-vim.opt.shiftwidth = 3 -- Number of spaces to use for each step of (auto)indent
-vim.opt.expandtab = true -- Use spaces instead of tabs
-vim.opt.smartindent = true -- Enable smart indentation
-vim.opt.autoindent = true -- Copy indent from current line when starting a new line
-
 -- Sets how neovim will display certain whitespace characters in the editor.
 --  See `:help 'list'`
 --  and `:help 'listchars'`
