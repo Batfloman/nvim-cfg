@@ -1,5 +1,3 @@
-require 'first'
-
 --[[
 
 =====================================================================
@@ -86,12 +84,6 @@ I hope you enjoy your Neovim journey,
 P.S. You can delete this when you're done too. It's your config now! :)
 --]]
 
--- Set <space> as the leader key
--- See `:help mapleader`
---  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
-vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
-
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
@@ -99,17 +91,6 @@ vim.g.have_nerd_font = false
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
-
--- Enable line numbers
-vim.opt.number = true -- Set absolute line numbers
-vim.opt.relativenumber = true -- Set relative line numbers
-
--- Align absolute line numbers to the left and relative line numbers to the right
-vim.opt.numberwidth = 5 -- Set the width of the number column
-vim.opt.signcolumn = 'yes' -- Show sign column to avoid shifting text
-
--- Enable mouse mode, can be useful for resizing splits for example!
-vim.opt.mouse = 'a'
 
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
@@ -154,12 +135,6 @@ vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = 'split'
-
--- Show which line your cursor is on
-vim.opt.cursorline = true
-
--- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -210,3 +185,5 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+
+require 'first'
