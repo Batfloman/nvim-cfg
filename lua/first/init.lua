@@ -1,10 +1,18 @@
 require 'first.remap'
 
 -- Remove default keymaps
-vim.keymap.del('n', 'grn')
-vim.keymap.del('n', 'grr')
-vim.keymap.del('n', 'gra')
-vim.keymap.del('x', 'gra')
+local keys_to_delete = {
+   { mode = 'n', key = 'grn' },
+   { mode = 'n', key = 'grr' },
+   { mode = 'n', key = 'gra' },
+   { mode = 'x', key = 'gra' },
+}
+
+for _, map in ipairs(keys_to_delete) do
+   if vim.fn.maparg(map.key, map.mode) ~= '' then  -- Check if the mapping exists
+       vim.api.nvim_del_keymap(map.mode, map.key)
+   end
+end
 
 -- Sets indentation
 vim.opt.tabstop = 5 -- Number of visual spaces per TAB
