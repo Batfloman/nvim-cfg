@@ -168,6 +168,20 @@ return {
       eslint = {},
       ts_ls = {},
 
+      clangd = {
+        cmd = { 'clangd' }, -- Ensure `clangd` is installed and accessible in your PATH
+        filetypes = { 'c', 'cpp', 'objc', 'objcpp' },
+        root_dir = require('lspconfig.util').root_pattern('.clangd', '.clang-tidy', '.clang-format', 'compile_commands.json', 'compile_flags.txt', '.git'),
+        capabilities = {
+          offsetEncoding = { 'utf-16' }, -- Required by clangd to avoid offset mismatch
+        },
+        settings = {
+          clangd = {
+            fallbackFlags = { '-std=c++17' }, -- Example: Set default C++ standard
+          },
+        },
+      },
+
       lua_ls = {
         -- cmd = {...},
         -- filetypes = { ...},
