@@ -1,4 +1,4 @@
-require 'first.remap'
+require 'remap'
 
 -- Sets indentation
 vim.opt.tabstop = 5 -- Number of visual spaces per TAB
@@ -28,4 +28,4 @@ vim.opt.scrolloff = 12
 vim.opt.cursorline = true
 
 -- Load Plugins
-require 'first.config.lazy'
+require 'config.lazy'

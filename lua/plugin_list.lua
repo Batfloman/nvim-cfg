@@ -8,11 +8,11 @@ local function load_plugins_from_dir(dir, module_prefix)
 
     if type == 'directory' then
       -- Recursive call for subdirectories, update module_prefix
-      local prefix = (module_prefix or 'first.plugins.') .. file .. '.'
+      local prefix = (module_prefix or 'plugins.') .. file .. '.'
       load_plugins_from_dir(path, prefix)
     elseif type == 'file' and file:match '%.lua$' then
       -- Construct the module name
-      local module_name = (module_prefix or 'first.plugins.') .. file:sub(1, -5) -- Remove .lua
+      local module_name = (module_prefix or 'plugins.') .. file:sub(1, -5) -- Remove .lua
       local success, plugin = pcall(require, module_name) -- Load the plugin
       if success then
         table.insert(plugins, plugin) -- Add the plugin to the list
@@ -24,7 +24,7 @@ local function load_plugins_from_dir(dir, module_prefix)
 end
 
 -- Load all plugins from the plugins folder
-local plugin_folder_path = vim.fn.stdpath 'config' .. '/lua/first/plugins'
+local plugin_folder_path = vim.fn.stdpath 'config' .. '/lua/plugins'
 load_plugins_from_dir(plugin_folder_path)
 
 return plugins
