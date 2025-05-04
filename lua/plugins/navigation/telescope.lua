@@ -77,7 +77,7 @@ return {
 
     -- Respektiert .gitignore (Standard)
     vim.keymap.set('n', '<leader>sf', function()
-      builtin.find_files {}
+      builtin.find_files { no_ignore = false, hidden = false }
     end, { desc = '[S]earch [F]iles' })
 
     -- Ignoriert .gitignore (zeigt alles)

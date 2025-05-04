@@ -18,7 +18,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- [[ Import the plugin_list ]]
-local plugin_list = require 'plugin_list'
+local plugin_list = require 'config.plugin_list'
 
 require('lazy').setup(plugin_list, {
   ui = {
