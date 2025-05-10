@@ -15,11 +15,12 @@ return {
       local dir = vim.fn.expand '%:p:h'
 
       local term = Terminal:new {
-        name = 'Cool name',
+        display_name = dir,
         dir = dir,
         direction = 'float',
       }
       term:toggle()
+      -- vim.cmd('ToggleTermSetName ' .. dir)
     end, { desc = '[T]erminal [c]reate (in file dir)' })
 
     vim.keymap.set('n', '<leader>Tl', '<cmd>TermSelect<CR>', { desc = '[T]erminal [l]ist' })
