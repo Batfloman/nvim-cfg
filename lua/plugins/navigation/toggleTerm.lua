@@ -15,9 +15,6 @@ return {
     vim.keymap.set({ 'n', 't' }, '<C-T>', function()
       local count = vim.v.count > 0 and vim.v.count or nil
       require('toggleterm').toggle(count)
-      -- reopen to see changes made by 'on_create'
-      require('toggleterm').toggle(count)
-      require('toggleterm').toggle(count)
     end, { desc = 'Toggle Terminal (with optional count)' })
 
     vim.keymap.set({ 'n', 't' }, '<leader>Tc', function()
