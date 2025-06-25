@@ -149,7 +149,7 @@ return {
       pyright = {},
 
       -- Javascript
-      eslint = {},
+      -- eslint = {},
       ts_ls = {},
 
       clangd = {
