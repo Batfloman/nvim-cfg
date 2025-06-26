@@ -31,5 +31,38 @@ return {
     end, { desc = '[T]erminal [c]reate (in file dir)' })
 
     vim.keymap.set('n', '<leader>Tl', '<cmd>TermSelect<CR>', { desc = '[T]erminal [l]ist' })
+
+    vim.keymap.set('t', '<C-Space>h', function()
+      local modu = require 'toggleterm.terminal'
+      local id = modu.get_focused_id() or modu.get_last_focused()
+      local term = require('toggleterm.terminal').get(id)
+      if term ~= nil and term.direction ~= 'horizontal' then
+        term:close()
+        term.direction = 'horizontal'
+        term:open()
+      end
+    end, { desc = '[T]erminal move horizontal' })
+
+    vim.keymap.set('t', '<C-Space>f', function()
+      local modu = require 'toggleterm.terminal'
+      local id = modu.get_focused_id() or modu.get_last_focused()
+      local term = require('toggleterm.terminal').get(id)
+      if term ~= nil and term.direction ~= 'float' then
+        term:close()
+        term.direction = 'float'
+        term:open()
+      end
+    end, { desc = '[T]erminal move horizontal' })
+
+    vim.keymap.set('t', '<C-Space>v', function()
+      local modu = require 'toggleterm.terminal'
+      local id = modu.get_focused_id() or modu.get_last_focused()
+      local term = require('toggleterm.terminal').get(id)
+      if term ~= nil and term.direction ~= 'vertical' then
+        term:close()
+        term.direction = 'vertical'
+        term:open()
+      end
+    end, { desc = '[T]erminal move horizontal' })
   end,
 }
