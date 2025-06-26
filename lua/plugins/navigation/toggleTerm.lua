@@ -2,67 +2,110 @@ return {
   'akinsho/toggleterm.nvim',
   version = '*',
   config = function()
+    -- manage created terminals & order to open/toggle terminals
+    local terms = {}
+
+    -- default settings
     require('toggleterm').setup {
       dir = vim.fn.expand '%:p:h',
       direction = 'float',
-      on_create = function(t)
+      on_open = function(t) -- move term to the back of 'terms' table
+        for i, term in ipairs(terms) do
+          if term.id == t.id then
+            -- Element ans Ende verschieben
+            table.remove(terms, i)
+            table.insert(terms, term)
+            break
+          end
+        end
+      end,
+      on_create = function(t) -- init
         local dir = vim.fn.expand '%:p:h'
         dir = string.match(dir, '~/(.+)//')
         t.display_name = string.format('[Terminal %d] - %s', t.id, dir)
+        table.insert(terms, t)
+      end,
+      on_exit = function(t) -- auto clean
+        for i, term in ipairs(terms) do
+          if term.id == t.id then
+            table.remove(terms, i)
+            break
+          end
+        end
       end,
     }
 
-    vim.keymap.set({ 'n', 't' }, '<C-T>', function()
-      local count = vim.v.count > 0 and vim.v.count or nil
-      require('toggleterm').toggle(count)
-    end, { desc = 'Toggle Terminal (with optional count)' })
+    -- ==================================================
+    -- Keymaps
 
-    vim.keymap.set({ 'n', 't' }, '<leader>Tc', function()
+    vim.keymap.set({ 'n', 't' }, '<C-T>', function() -- Toggle term
+      -- TODO: add vim.v.count support
+
+      -- toggle the last opened 'float' terminal
+      for i = #terms, 1, -1 do
+        local term = terms[i]
+        if term.direction == 'float' then
+          term:toggle()
+          return
+        end
+      end
+
+      -- create float term if there are none
+      require('toggleterm.terminal').Terminal:new():toggle()
+    end, { desc = 'Toggle floating terminal (with optional count)' })
+
+    vim.keymap.set({ 'n', 't' }, '<leader>Tc', function() -- Create new Terminal in current dir
       local Terminal = require('toggleterm.terminal').Terminal
-      local dir = vim.fn.expand '%:p:h'
+      local dir = vim.fn.expand '%:p:h' -- use current filepath
 
       local term = Terminal:new {
         dir = dir,
-        direction = 'float',
       }
-      term.display_name = string.format('[Terminal %d] - %s', term.id, dir)
 
       term:toggle()
     end, { desc = '[T]erminal [c]reate (in file dir)' })
 
-    vim.keymap.set('n', '<leader>Tl', '<cmd>TermSelect<CR>', { desc = '[T]erminal [l]ist' })
+    vim.keymap.set('n', '<leader>Tl', '<cmd>TermSelect<CR>', { desc = '[T]erminal [l]ist' }) -- List Terminals
 
-    vim.keymap.set('t', '<C-Space>h', function()
-      local modu = require 'toggleterm.terminal'
-      local id = modu.get_focused_id() or modu.get_last_focused()
-      local term = require('toggleterm.terminal').get(id)
-      if term ~= nil and term.direction ~= 'horizontal' then
-        term:close()
-        term.direction = 'horizontal'
-        term:open()
-      end
-    end, { desc = '[T]erminal move horizontal' })
+    -- ==================================================
+    -- In Terminal Keybinds
 
-    vim.keymap.set('t', '<C-Space>f', function()
-      local modu = require 'toggleterm.terminal'
-      local id = modu.get_focused_id() or modu.get_last_focused()
-      local term = require('toggleterm.terminal').get(id)
-      if term ~= nil and term.direction ~= 'float' then
-        term:close()
-        term.direction = 'float'
-        term:open()
-      end
-    end, { desc = '[T]erminal move horizontal' })
+    local original_timeout = vim.o.timeoutlen
+    vim.api.nvim_create_autocmd('TermEnter', {
+      callback = function()
+        vim.o.timeoutlen = 1500
+      end,
+    })
 
-    vim.keymap.set('t', '<C-Space>v', function()
-      local modu = require 'toggleterm.terminal'
-      local id = modu.get_focused_id() or modu.get_last_focused()
-      local term = require('toggleterm.terminal').get(id)
-      if term ~= nil and term.direction ~= 'vertical' then
-        term:close()
-        term.direction = 'vertical'
-        term:open()
-      end
-    end, { desc = '[T]erminal move horizontal' })
+    vim.api.nvim_create_autocmd('TermLeave', {
+      callback = function()
+        vim.o.timeoutlen = original_timeout
+      end,
+    })
+
+    -- function to change the direction of a terminal
+    local function set_term_direction_map(lhs, direction, extra)
+      vim.keymap.set('t', lhs, function()
+        local term_mod = require 'toggleterm.terminal'
+        local id = term_mod.get_focused_id()
+        local term = term_mod.get(id)
+        if term ~= nil and term.direction ~= direction then
+          term:close()
+          term.direction = direction
+          if extra then
+            extra(term)
+          end
+          term:open()
+        end
+      end, { desc = '[T]erminal direction ' .. direction })
+    end
+
+    -- Mappings
+    set_term_direction_map('<C-Space>h', 'horizontal')
+    set_term_direction_map('<C-Space>f', 'float')
+    set_term_direction_map('<C-Space>v', 'vertical', function(term)
+      term:resize(50)
+    end)
+    set_term_direction_map('<C-Space>t', 'tab')
   end,
 }
