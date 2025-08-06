@@ -18,6 +18,15 @@ return {
       window = {
         mappings = {
           ['\\'] = 'close_window',
+          ['gx'] = function(state)
+            local node = state.tree:get_node()
+            local path = node:get_id()
+            if path:match '%.pdf$' then
+              vim.fn.jobstart({ 'zathura', path }, { detach = true })
+            else
+              require('neo-tree.sources.filesystem.commands').open(state)
+            end
+          end,
         },
       },
     },
