@@ -8,6 +8,7 @@ return {
       out_dir = './build',
       options = {
         '-outdir=./build', -- Tells latexmk to output files in the build directory
+        '-shell-escape', -- required for standalone to crop
       },
     }
   end,
