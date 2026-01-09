@@ -29,3 +29,10 @@ vim.opt.cursorline = true
 
 -- Load Plugins
 require 'config.lazy'
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'python',
+  callback = function()
+    vim.bo.indentexpr = ''
+  end,
+})
