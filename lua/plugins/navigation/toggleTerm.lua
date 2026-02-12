@@ -38,7 +38,7 @@ return {
     -- ==================================================
     -- Keymaps
 
-    vim.keymap.set({ 'n', 't' }, '<C-T>', function() -- Toggle term
+    vim.keymap.set({ 'n', 't' }, '<leader>To', function() -- Toggle term
       -- TODO: add vim.v.count support
 
       -- toggle the last opened 'float' terminal
@@ -68,28 +68,64 @@ return {
     vim.keymap.set('n', '<leader>Tl', '<cmd>TermSelect<CR>', { desc = '[T]erminal [l]ist' }) -- List Terminals
 
     -- ==================================================
-    -- In Terminal Keybinds
+    -- In Terminal Keybinds / UX
 
     local original_timeout = vim.o.timeoutlen
+    local function set_term_winbar(mode)
+      local hint = mode == 'INSERT' and '<Esc><Esc> -> NORMAL' or 'i -> INSERT'
+      vim.wo.winbar = string.format(' Terminal [%s]  %s ', mode, hint)
+    end
+
     vim.api.nvim_create_autocmd('TermEnter', {
       callback = function()
         vim.o.timeoutlen = 1500
+        set_term_winbar 'INSERT'
       end,
     })
 
     vim.api.nvim_create_autocmd('TermLeave', {
       callback = function()
         vim.o.timeoutlen = original_timeout
+        set_term_winbar 'NORMAL'
       end,
     })
 
-    -- function to change the direction of a terminal
+    -- fast way to leave terminal-insert mode
+    vim.keymap.set('t', '<Esc><Esc>', [[<C-\><C-n>]], { desc = 'Terminal normal mode' })
+
+    local function get_active_term()
+      local term_mod = require 'toggleterm.terminal'
+      local id = term_mod.get_focused_id()
+      if id ~= nil then
+        local focused = term_mod.get(id)
+        if focused ~= nil then
+          return focused
+        end
+      end
+
+      for i = #terms, 1, -1 do
+        if terms[i] ~= nil then
+          return terms[i]
+        end
+      end
+    end
+
+    -- change terminal orientation from normal or terminal mode
     local function set_term_direction_map(lhs, direction, extra)
-      vim.keymap.set('t', lhs, function()
-        local term_mod = require 'toggleterm.terminal'
-        local id = term_mod.get_focused_id()
-        local term = term_mod.get(id)
-        if term ~= nil and term.direction ~= direction then
+      vim.keymap.set({ 'n', 't' }, lhs, function()
+        local term = get_active_term()
+        local Terminal = require('toggleterm.terminal').Terminal
+
+        if term == nil then
+          term = Terminal:new { direction = direction, dir = vim.fn.expand '%:p:h' }
+          if extra then
+            extra(term)
+          end
+          term:toggle()
+          return
+        end
+
+        if term.direction ~= direction then
           term:close()
           term.direction = direction
           if extra then
@@ -100,12 +136,19 @@ return {
       end, { desc = '[T]erminal direction ' .. direction })
     end
 
-    -- Mappings
-    set_term_direction_map('<C-Space>h', 'horizontal')
-    set_term_direction_map('<C-Space>f', 'float')
-    set_term_direction_map('<C-Space>v', 'vertical', function(term)
+    -- Quick mappings (single keystroke chord) + leader fallbacks
+    set_term_direction_map('<A-h>', 'horizontal')
+    set_term_direction_map('<A-f>', 'float')
+    set_term_direction_map('<A-v>', 'vertical', function(term)
       term:resize(50)
     end)
-    set_term_direction_map('<C-Space>t', 'tab')
+    set_term_direction_map('<A-t>', 'tab')
+
+    set_term_direction_map('<leader>Th', 'horizontal')
+    set_term_direction_map('<leader>Tf', 'float')
+    set_term_direction_map('<leader>Tv', 'vertical', function(term)
+      term:resize(50)
+    end)
+    set_term_direction_map('<leader>Tt', 'tab')
   end,
 }
