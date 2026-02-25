@@ -33,9 +33,49 @@ local check_external_reqs = function()
   return true
 end
 
+local check_live_server_workflow = function()
+  vim.health.start 'Live Server Workflow'
+
+  local uv = vim.uv or vim.loop
+  local uname = uv.os_uname()
+  local is_wsl = uname.release:lower():find('microsoft', 1, true) ~= nil
+
+  if vim.fn.executable('npx') == 1 then
+    vim.health.ok("Found executable: 'npx'")
+  else
+    vim.health.warn("Missing executable: 'npx' (required for `npx live-server`)")
+  end
+
+  if vim.fn.executable('live-server') == 1 then
+    vim.health.ok("Found executable: 'live-server'")
+  else
+    vim.health.info("`live-server` not global, that's fine if you use `npx --yes live-server`")
+  end
+
+  if is_wsl then
+    vim.health.info 'WSL detected'
+    if vim.fn.executable('wslview') == 1 then
+      vim.health.ok("Found executable: 'wslview'")
+    else
+      vim.health.warn("Missing executable: 'wslview' (install package `wslu` for better URL opening in WSL)")
+    end
+    if vim.fn.executable('powershell.exe') == 1 then
+      vim.health.ok("Found executable: 'powershell.exe'")
+    else
+      vim.health.warn("Missing executable: 'powershell.exe' (WSL Windows URL opener fallback)")
+    end
+  end
+
+  if vim.fn.executable('xdg-open') == 1 or vim.fn.executable('open') == 1 or vim.fn.executable('wslview') == 1 then
+    vim.health.ok 'Found at least one URL opener command'
+  else
+    vim.health.warn("No URL opener found (`xdg-open`, `open`, or `wslview`)")
+  end
+end
+
 return {
   check = function()
-    vim.health.start 'kickstart.nvim'
+    vim.health.start 'nvim config'
 
     vim.health.info [[NOTE: Not every warning is a 'must-fix' in `:checkhealth`
 
@@ -48,5 +88,6 @@ return {
 
     check_version()
     check_external_reqs()
+    check_live_server_workflow()
   end,
 }
