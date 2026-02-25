@@ -182,7 +182,7 @@ return {
     -- ==================================================
     -- Keymaps
 
-    vim.keymap.set({ 'n', 't' }, '<leader>To', function() -- Toggle term
+    vim.keymap.set('n', '<leader>To', function() -- Toggle term
       -- TODO: add vim.v.count support
 
       -- toggle the last opened 'float' terminal
@@ -198,7 +198,7 @@ return {
       require('toggleterm.terminal').Terminal:new():toggle()
     end, { desc = 'Toggle floating terminal (with optional count)' })
 
-    vim.keymap.set({ 'n', 't' }, '<leader>Tc', function() -- Create new Terminal in current dir
+    vim.keymap.set('n', '<leader>Tc', function() -- Create new Terminal in current dir
       local Terminal = require('toggleterm.terminal').Terminal
       local dir = vim.fn.expand '%:p:h' -- use current filepath
 
@@ -262,9 +262,9 @@ return {
       end
     end
 
-    -- change terminal orientation from normal or terminal mode
-    local function set_term_direction_map(lhs, direction, extra)
-      vim.keymap.set({ 'n', 't' }, lhs, function()
+    -- change terminal orientation with configurable modes
+    local function set_term_direction_map(lhs, direction, modes, extra)
+      vim.keymap.set(modes, lhs, function()
         local term = get_active_term()
         local Terminal = require('toggleterm.terminal').Terminal
 
@@ -289,18 +289,18 @@ return {
     end
 
     -- Quick mappings (single keystroke chord) + leader fallbacks
-    set_term_direction_map('<A-h>', 'horizontal')
-    set_term_direction_map('<A-f>', 'float')
-    set_term_direction_map('<A-v>', 'vertical', function(term)
+    set_term_direction_map('<A-h>', 'horizontal', { 'n', 't' })
+    set_term_direction_map('<A-f>', 'float', { 'n', 't' })
+    set_term_direction_map('<A-v>', 'vertical', { 'n', 't' }, function(term)
       term:resize(50)
     end)
-    set_term_direction_map('<A-t>', 'tab')
+    set_term_direction_map('<A-t>', 'tab', { 'n', 't' })
 
-    set_term_direction_map('<leader>Th', 'horizontal')
-    set_term_direction_map('<leader>Tf', 'float')
-    set_term_direction_map('<leader>Tv', 'vertical', function(term)
+    set_term_direction_map('<leader>Th', 'horizontal', { 'n' })
+    set_term_direction_map('<leader>Tf', 'float', { 'n' })
+    set_term_direction_map('<leader>Tv', 'vertical', { 'n' }, function(term)
       term:resize(50)
     end)
-    set_term_direction_map('<leader>Tt', 'tab')
+    set_term_direction_map('<leader>Tt', 'tab', { 'n' })
   end,
 }
