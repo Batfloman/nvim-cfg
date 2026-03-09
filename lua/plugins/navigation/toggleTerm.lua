@@ -149,6 +149,34 @@ return {
       end
     end
 
+    local function get_current_file_dir()
+      local path = vim.api.nvim_buf_get_name(0)
+      if path == nil or path == '' then
+        return vim.fn.getcwd()
+      end
+
+      return vim.fn.fnamemodify(path, ':p:h')
+    end
+
+    local function get_project_root()
+      local bufnr = vim.api.nvim_get_current_buf()
+      for _, client in ipairs(vim.lsp.get_clients { bufnr = bufnr }) do
+        local root_dir = client.config and client.config.root_dir
+        if root_dir ~= nil and root_dir ~= '' then
+          return root_dir
+        end
+      end
+
+      local path = vim.api.nvim_buf_get_name(bufnr)
+      local start_path = (path ~= nil and path ~= '') and vim.fs.dirname(path) or vim.fn.getcwd()
+      local git_root = vim.fs.root(start_path, '.git')
+      if git_root ~= nil and git_root ~= '' then
+        return git_root
+      end
+
+      return vim.fn.getcwd()
+    end
+
     -- default settings
     require('toggleterm').setup {
       dir = vim.fn.expand '%:p:h',
@@ -200,7 +228,7 @@ return {
 
     vim.keymap.set('n', '<leader>Tc', function() -- Create new Terminal in current dir
       local Terminal = require('toggleterm.terminal').Terminal
-      local dir = vim.fn.expand '%:p:h' -- use current filepath
+      local dir = get_current_file_dir()
 
       local term = Terminal:new {
         dir = dir,
@@ -208,6 +236,16 @@ return {
 
       term:toggle()
     end, { desc = '[T]erminal [c]reate (in file dir)' })
+
+    vim.keymap.set('n', '<leader>TC', function() -- Create new Terminal in project root
+      local Terminal = require('toggleterm.terminal').Terminal
+
+      local term = Terminal:new {
+        dir = get_project_root(),
+      }
+
+      term:toggle()
+    end, { desc = '[T]erminal create (project [r]oot)' })
 
     vim.keymap.set('n', '<leader>Tl', function() -- List Terminals
       refresh_all_term_display_names()
