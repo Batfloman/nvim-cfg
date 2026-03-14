@@ -80,8 +80,33 @@ local on_attach = function(event)
   --
   -- This may be unwanted, since they displace some of your code
   if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
+    vim.b[event.buf].inlay_hints_enabled = true
+    vim.lsp.inlay_hint.enable(true, { bufnr = event.buf })
+
+    local inlay_hint_augroup = vim.api.nvim_create_augroup('kickstart-lsp-inlay-hints', { clear = false })
+    vim.api.nvim_create_autocmd('InsertEnter', {
+      buffer = event.buf,
+      group = inlay_hint_augroup,
+      callback = function(args)
+        if vim.b[args.buf].inlay_hints_enabled then
+          vim.lsp.inlay_hint.enable(false, { bufnr = args.buf })
+        end
+      end,
+    })
+
+    vim.api.nvim_create_autocmd('InsertLeave', {
+      buffer = event.buf,
+      group = inlay_hint_augroup,
+      callback = function(args)
+        if vim.b[args.buf].inlay_hints_enabled then
+          vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
+        end
+      end,
+    })
+
     map('<leader>th', function()
-      vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
+      vim.b[event.buf].inlay_hints_enabled = not vim.b[event.buf].inlay_hints_enabled
+      vim.lsp.inlay_hint.enable(vim.b[event.buf].inlay_hints_enabled and vim.api.nvim_get_mode().mode ~= 'i', { bufnr = event.buf })
     end, '[T]oggle Inlay [H]ints')
   end
 end
@@ -107,6 +132,21 @@ return {
     'hrsh7th/cmp-nvim-lsp',
   },
   config = function()
+    local set_inlay_hint_highlight = function()
+      local comment_hl = vim.api.nvim_get_hl(0, { name = 'Comment' })
+      vim.api.nvim_set_hl(0, 'LspInlayHint', {
+        default = false,
+        fg = comment_hl.fg,
+        italic = true,
+      })
+    end
+
+    set_inlay_hint_highlight()
+    vim.api.nvim_create_autocmd('ColorScheme', {
+      group = vim.api.nvim_create_augroup('kickstart-lsp-inlay-highlight', { clear = true }),
+      callback = set_inlay_hint_highlight,
+    })
+
     --  This function gets run when an LSP attaches to a particular buffer.
     --    That is to say, every time a new file is opened that is associated with
     --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
@@ -132,55 +172,7 @@ return {
     --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
     --  - settings (table): Override the default settings passed when initializing the server.
     --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
-    local servers = {
-      -- clangd = {},
-      -- gopls = {},
-      -- pyright = {},
-      -- rust_analyzer = {},
-      -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-      --
-      -- Some languages (like typescript) have entire language plugins that can be useful:
-      --    https://github.com/pmizio/typescript-tools.nvim
-      --
-      -- But for many setups, the LSP (`ts_ls`) will work just fine
-      -- ts_ls = {},
-
-      -- Python
-      pyright = {},
-
-      -- Javascript
-      -- eslint = {},
-      ts_ls = {},
-
-      clangd = {
-        cmd = { 'clangd' }, -- Ensure `clangd` is installed and accessible in your PATH
-        filetypes = { 'c', 'cpp', 'objc', 'objcpp' },
-        root_dir = require('lspconfig.util').root_pattern('.clangd', '.clang-tidy', '.clang-format', 'compile_commands.json', 'compile_flags.txt', '.git'),
-        capabilities = {
-          offsetEncoding = { 'utf-16' }, -- Required by clangd to avoid offset mismatch
-        },
-        settings = {
-          clangd = {
-            fallbackFlags = { '-std=c++17' }, -- Example: Set default C++ standard
-          },
-        },
-      },
-
-      lua_ls = {
-        -- cmd = {...},
-        -- filetypes = { ...},
-        -- capabilities = {},
-        settings = {
-          Lua = {
-            completion = {
-              callSnippet = 'Replace',
-            },
-            -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-            -- diagnostics = { disable = { 'missing-fields' } },
-          },
-        },
-      },
-    }
+    local servers = require 'config.lsp.servers'
     -- Ensure the servers and tools above are installed
     --  To check the current status of installed tools and/or manually install
     --  other tools, you can run
@@ -200,16 +192,16 @@ return {
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
     require('mason-lspconfig').setup {
-      handlers = {
-        function(server_name)
-          local server = servers[server_name] or {}
-          -- This handles overriding only values explicitly passed
-          -- by the server configuration above. Useful when disabling
-          -- certain features of an LSP (for example, turning off formatting for ts_ls)
-          server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-          require('lspconfig')[server_name].setup(server)
-        end,
-      },
+      automatic_enable = false,
     }
+
+    for server_name, server in pairs(servers) do
+      -- This handles overriding only values explicitly passed
+      -- by the server configuration above. Useful when disabling
+      -- certain features of an LSP (for example, turning off formatting for ts_ls)
+      server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+      vim.lsp.config(server_name, server)
+      vim.lsp.enable(server_name)
+    end
   end,
 }
