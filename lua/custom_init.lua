@@ -13,6 +13,8 @@ vim.opt.autoindent = true -- Copy indent from current line when starting a new l
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+require 'custom_commands.toggle_line_wrap'
+
 -- Enable line numbers
 vim.opt.number = true -- Set absolute line numbers
 vim.opt.relativenumber = true -- Set relative line numbers
