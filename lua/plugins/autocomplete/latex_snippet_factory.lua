@@ -50,6 +50,31 @@ local function make_capture_node(ls, capture_index)
   end)
 end
 
+local function split_text_node(text)
+  if not text:find('\n', 1, true) then
+    return text
+  end
+
+  text = text:gsub('\r\n', '\n')
+
+  local lines = {}
+  local start = 1
+
+  while true do
+    local newline = text:find('\n', start, true)
+
+    if not newline then
+      table.insert(lines, text:sub(start))
+      break
+    end
+
+    table.insert(lines, text:sub(start, newline - 1))
+    start = newline + 1
+  end
+
+  return lines
+end
+
 local function make_nodes(ls, replacement)
   if type(replacement) == 'function' then
     return {
@@ -85,7 +110,7 @@ local function make_nodes(ls, replacement)
         next_pos = next_pos + 1
       end
 
-      table.insert(nodes, ls.text_node(replacement:sub(pos, next_pos - 1)))
+      table.insert(nodes, ls.text_node(split_text_node(replacement:sub(pos, next_pos - 1))))
       pos = next_pos
     end
   end
