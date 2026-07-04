@@ -14,6 +14,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 require 'custom_commands.toggle_line_wrap'
+require 'custom_commands.cern_root'
 
 -- Enable line numbers
 vim.opt.number = true -- Set absolute line numbers

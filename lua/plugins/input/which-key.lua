@@ -45,7 +45,12 @@ return {
     spec = {
       { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
       { '<leader>d', group = '[D]ocument' },
-      { '<leader>r', group = '[R]ename' },
+      {
+        '<leader>r',
+        group = function()
+          return vim.bo.filetype == 'root' and '[R]OOT' or '[R]ename'
+        end,
+      },
       { '<leader>s', group = '[S]earch' },
       { '<leader>w', group = '[W]orkspace' },
       { '<leader>t', group = '[T]oggle' },
