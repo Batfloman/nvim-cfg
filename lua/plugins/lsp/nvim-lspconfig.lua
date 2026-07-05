@@ -190,6 +190,7 @@ return {
       'stylua', -- Used to format Lua code
       'typescript-language-server',
       'prettierd', -- Formatter for JS/TS
+      'markdownlint', -- Linter for Markdown
     })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
