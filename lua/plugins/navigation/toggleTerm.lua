@@ -177,10 +177,61 @@ return {
       return vim.fn.getcwd()
     end
 
+    local term_output_pending = {}
+    local term_modes = {}
+    local set_term_winbar
+
+    local function get_focused_term()
+      local term_mod = require 'toggleterm.terminal'
+      local id = term_mod.get_focused_id()
+      if id == nil then
+        return nil
+      end
+
+      return term_mod.get(id)
+    end
+
+    local function term_is_at_bottom(term)
+      if term == nil or term.window == nil or not vim.api.nvim_win_is_valid(term.window) then
+        return false
+      end
+
+      return vim.api.nvim_win_call(term.window, function()
+        local view = vim.fn.winsaveview()
+        local win_height = vim.api.nvim_win_get_height(0)
+        local line_count = vim.api.nvim_buf_line_count(term.bufnr)
+        return view.topline + win_height - 1 >= line_count
+      end)
+    end
+
+    local function clear_term_output_if_at_bottom(term)
+      if term ~= nil and term_is_at_bottom(term) then
+        term_output_pending[term.id] = nil
+      end
+    end
+
+    local function mark_term_output(term)
+      vim.schedule(function()
+        if term == nil or term.id == nil then
+          return
+        end
+
+        if not term_is_at_bottom(term) then
+          term_output_pending[term.id] = true
+          if set_term_winbar ~= nil then
+            set_term_winbar(term_modes[term.id] or 'NORMAL', term)
+          end
+        end
+      end)
+    end
+
     -- default settings
     require('toggleterm').setup {
       dir = vim.fn.expand '%:p:h',
       direction = 'float',
+      auto_scroll = false,
+      on_stdout = mark_term_output,
+      on_stderr = mark_term_output,
       on_open = function(t) -- move term to the back of 'terms' table
         refresh_term_display_name(t)
 
@@ -198,6 +249,9 @@ return {
         table.insert(terms, t)
       end,
       on_exit = function(t) -- auto clean
+        term_output_pending[t.id] = nil
+        term_modes[t.id] = nil
+
         for i, term in ipairs(terms) do
           if term.id == t.id then
             table.remove(terms, i)
@@ -256,20 +310,35 @@ return {
     -- In Terminal Keybinds / UX
 
     local original_timeout = vim.o.timeoutlen
-    local function set_term_winbar(mode)
+    set_term_winbar = function(mode, term)
+      term = term or get_focused_term()
+      if term ~= nil then
+        term_modes[term.id] = mode
+      end
+
       local hint = mode == 'INSERT' and '<Esc><Esc> -> NORMAL' or 'i -> INSERT'
-      vim.wo.winbar = string.format(' Terminal [%s]  %s ', mode, hint)
+      local output_marker = term ~= nil and term_output_pending[term.id] and '  [new output]' or ''
+      local winbar = string.format(' Terminal [%s]%s  %s ', mode, output_marker, hint)
+
+      if term ~= nil and term.window ~= nil and vim.api.nvim_win_is_valid(term.window) then
+        vim.api.nvim_win_call(term.window, function()
+          vim.wo.winbar = winbar
+        end)
+        return
+      end
+
+      vim.wo.winbar = winbar
     end
 
     vim.api.nvim_create_autocmd('TermEnter', {
       callback = function()
         vim.o.timeoutlen = 1500
-        set_term_winbar 'INSERT'
-        local term_mod = require 'toggleterm.terminal'
-        local id = term_mod.get_focused_id()
-        if id ~= nil then
-          refresh_term_display_name(term_mod.get(id))
+        local term = get_focused_term()
+        if term ~= nil then
+          clear_term_output_if_at_bottom(term)
+          refresh_term_display_name(term)
         end
+        set_term_winbar('INSERT', term)
       end,
     })
 
@@ -277,6 +346,16 @@ return {
       callback = function()
         vim.o.timeoutlen = original_timeout
         set_term_winbar 'NORMAL'
+      end,
+    })
+
+    vim.api.nvim_create_autocmd({ 'WinScrolled', 'CursorMoved' }, {
+      callback = function()
+        local term = get_focused_term()
+        clear_term_output_if_at_bottom(term)
+        if term ~= nil then
+          set_term_winbar(term_modes[term.id] or 'NORMAL', term)
+        end
       end,
     })
 
