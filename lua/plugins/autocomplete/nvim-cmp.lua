@@ -43,7 +43,7 @@ return {
     luasnip.config.setup {
       enable_autosnippets = true,
     }
-    require('plugins.autocomplete.tex').setup()
+    require('config.autocomplete.tex').setup()
 
     cmp.setup {
       snippet = {
@@ -132,5 +132,7 @@ return {
         { name = 'path' },
       },
     }
+
+    require('config.autocomplete.python').setup(cmp)
   end,
 }

@@ -1,6 +1,4 @@
-local M = {
-  not_a_plugin = true,
-}
+local M = {}
 
 local function has_option(options, option)
   return type(options) == 'string' and options:find(option, 1, true) ~= nil

@@ -1,6 +1,4 @@
-local M = {
-  not_a_plugin = true,
-}
+local M = {}
 
 M.filetypes = {
   'tex',
