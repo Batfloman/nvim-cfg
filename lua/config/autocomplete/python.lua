@@ -21,6 +21,39 @@ local function entry_label(entry)
   return entry.completion_item.label or entry.word or ''
 end
 
+local function completion_text(entry)
+  local item = entry.completion_item
+  if type(item.textEdit) == 'table' then
+    return item.textEdit.newText or entry_label(entry)
+  end
+
+  return item.insertText or entry_label(entry)
+end
+
+local function is_named_parameter(entry)
+  return entry_label(entry):match '=%s*$' ~= nil or completion_text(entry):match '=%s*$' ~= nil
+end
+
+local function parameter_name(entry)
+  return completion_text(entry):match '^%s*([%a_][%w_]*)%s*=' or entry_label(entry):match '^%s*([%a_][%w_]*)%s*='
+end
+
+local function is_named_argument_value(context)
+  local before = context and context.cursor_before_line or cursor_before_line()
+  return before:match '[%a_][%w_]*%s*=%s*$' ~= nil
+end
+
+local function compare_named_parameters(entry1, entry2)
+  local parameter1 = is_named_parameter(entry1)
+  local parameter2 = is_named_parameter(entry2)
+
+  if parameter1 ~= parameter2 then
+    return parameter1
+  end
+
+  return nil
+end
+
 local function visibility_category(entry)
   local label = entry_label(entry)
 
@@ -36,6 +69,10 @@ local function visibility_category(entry)
 end
 
 local function compare_visibility(entry1, entry2)
+  if not is_member_completion() then
+    return nil
+  end
+
   local category1 = visibility_category(entry1)
   local category2 = visibility_category(entry2)
   if category1 ~= category2 then
@@ -43,6 +80,14 @@ local function compare_visibility(entry1, entry2)
   end
 
   return nil
+end
+
+local function compare_nonmember_sort_text(compare, entry1, entry2)
+  if is_member_completion() then
+    return nil
+  end
+
+  return compare.sort_text(entry1, entry2)
 end
 
 local function compare_alphabetically(entry1, entry2)
@@ -60,11 +105,35 @@ local function compare_alphabetically(entry1, entry2)
 end
 
 local function filter_lsp_entry(entry, context)
+  if is_named_argument_value(context) and is_named_parameter(entry) then
+    return false
+  end
+
+  local name = parameter_name(entry)
+  if name and require('config.autocomplete.python_signature').is_parameter_consumed(name) then
+    return false
+  end
+
   if show_all_members or not is_member_completion(context) then
     return true
   end
 
   return not is_dunder(entry_label(entry))
+end
+
+local function setup_parameter_highlight()
+  local function apply()
+    vim.api.nvim_set_hl(0, 'CmpItemKindParameter', {
+      default = true,
+      link = 'DiagnosticHint',
+    })
+  end
+
+  apply()
+  vim.api.nvim_create_autocmd('ColorScheme', {
+    group = vim.api.nvim_create_augroup('python-completion-highlight', { clear = true }),
+    callback = apply,
+  })
 end
 
 local function complete_or_show_all(cmp, fallback)
@@ -87,10 +156,25 @@ function M.setup(cmp)
         complete_or_show_all(cmp, fallback)
       end, { 'i' }),
     },
+    formatting = {
+      format = function(entry, item)
+        if entry.source.name == 'nvim_lsp' and is_named_parameter(entry) then
+          item.kind = 'Parameter'
+          item.kind_hl_group = 'CmpItemKindParameter'
+          item.menu = ''
+        end
+
+        return item
+      end,
+    },
     sorting = {
       comparators = {
+        compare_named_parameters,
         compare_visibility,
         compare.exact,
+        function(entry1, entry2)
+          return compare_nonmember_sort_text(compare, entry1, entry2)
+        end,
         compare_alphabetically,
         compare.order,
       },
@@ -108,6 +192,9 @@ function M.setup(cmp)
   cmp.event:on('menu_closed', function()
     show_all_members = false
   end)
+
+  require('config.autocomplete.python_signature').setup()
+  setup_parameter_highlight()
 end
 
 return M
