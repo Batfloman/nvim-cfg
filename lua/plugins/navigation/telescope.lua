@@ -2,6 +2,7 @@
 
 return {
   'nvim-telescope/telescope.nvim',
+  version = '*',
   event = 'VimEnter',
   dependencies = {
     'nvim-lua/plenary.nvim',
