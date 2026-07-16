@@ -1,6 +1,21 @@
 -- Neo-tree is a Neovim plugin to browse the file system
 -- https://github.com/nvim-neo-tree/neo-tree.nvim
 
+local image_extensions = {
+  avif = true,
+  bmp = true,
+  gif = true,
+  heic = true,
+  heif = true,
+  jpeg = true,
+  jpg = true,
+  png = true,
+  svg = true,
+  tif = true,
+  tiff = true,
+  webp = true,
+}
+
 return {
   'nvim-neo-tree/neo-tree.nvim',
   version = '*',
@@ -21,9 +36,16 @@ return {
           ['gx'] = function(state)
             local node = state.tree:get_node()
             local path = node:get_id()
-            if path:match '%.pdf$' then
+            local extension = path:lower():match '%.([^./]+)$'
+            if extension == 'pdf' then
               vim.fn.jobstart({ 'zathura', path }, { detach = true })
-            elseif path:match '%.root$' then
+            elseif image_extensions[extension] then
+              if vim.fn.executable 'imv-dir' == 1 then
+                vim.fn.jobstart({ 'imv-dir', path }, { detach = true })
+              else
+                vim.notify('Cannot open image: `imv-dir` is not executable', vim.log.levels.ERROR)
+              end
+            elseif extension == 'root' then
               local root = require 'custom_commands.cern_root'
               local actions = {
                 {
