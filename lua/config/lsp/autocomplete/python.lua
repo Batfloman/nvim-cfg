@@ -110,7 +110,7 @@ local function filter_lsp_entry(entry, context)
   end
 
   local name = parameter_name(entry)
-  if name and require('config.autocomplete.python_signature').is_parameter_consumed(name) then
+  if name and require('config.lsp.autocomplete.python_signature').is_parameter_consumed(name) then
     return false
   end
 
@@ -193,7 +193,7 @@ function M.setup(cmp)
     show_all_members = false
   end)
 
-  require('config.autocomplete.python_signature').setup()
+  require('config.lsp.autocomplete.python_signature').setup()
   setup_parameter_highlight()
 end
 

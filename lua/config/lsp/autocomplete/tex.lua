@@ -142,8 +142,8 @@ end
 
 function M.setup()
   local ls = require 'luasnip'
-  local factory = require 'config.autocomplete.latex_snippet_factory'
-  local config = require 'config.autocomplete.latex_snippets'
+  local factory = require 'config.lsp.autocomplete.latex_snippet_factory'
+  local config = require 'config.lsp.autocomplete.latex_snippets'
   for _, filetype in ipairs(config.filetypes) do
     ls.add_snippets(
       filetype,

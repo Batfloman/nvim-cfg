@@ -43,7 +43,7 @@ return {
     luasnip.config.setup {
       enable_autosnippets = true,
     }
-    require('config.autocomplete.tex').setup()
+    require('config.lsp.autocomplete.tex').setup()
 
     cmp.setup {
       snippet = {
@@ -133,6 +133,6 @@ return {
       },
     }
 
-    require('config.autocomplete.python').setup(cmp)
+    require('config.lsp.autocomplete.python').setup(cmp)
   end,
 }
